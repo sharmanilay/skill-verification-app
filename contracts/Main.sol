@@ -44,4 +44,35 @@ contact Main {
     uint256 company_id;
     bool is_approved;
   }
+
+  function sign_up(
+    stirng calldata email,
+    string calldata name,
+    string calldata acc_type
+  ) public {
+    // check if the account already exists
+    require(
+      email_to_address[email] == address(0),
+      "error: user already exists!"
+    );
+    email_to_address[email] = msg.sender;
+
+    if (strcmp(acc_type, "user")) {
+      user storage new_user = employees.push() // creates a new user and returns the reference to it
+      new_user.name = name;
+      new_user.id = employees.length - 1;
+      new_user.wallet_address = msg.sender;
+      address_to_id[msg.sender] = new_user.id;
+      new_user.user_skills = new uint256[](0);
+      new_user.user_work_experience = new uint256[](0);
+    } else {
+      company storage new_company = companies.push();
+      new_company.name = name;
+      new_company.id = companies.length - 1;
+      new_company.wallet_address  = msg.sender;
+      new_company.current_employees = new uint256[](0);
+      address_to_id[msg.sender] = new_company.id;
+      is_company[msg.sender] = true;
+    }
+  }
 }
