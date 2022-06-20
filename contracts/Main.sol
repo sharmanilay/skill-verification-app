@@ -15,7 +15,7 @@ contact Main {
   // mapping of wallet address with bool representing account status(Company/User)
   mapping(address => bool) public is_company;
 
-  stuct company {
+  struct company {
     uint256 id; // company id which is the index of id in the global company array
     string name; // company name
     address: wallet_address;
@@ -45,11 +45,34 @@ contact Main {
     bool is_approved;
   }
 
-  function sign_up(
-    stirng calldata email,
-    string calldata name,
-    string calldata acc_type
-  ) public {
+  struct certificate {
+    string url;
+    string issue_date;
+    string valid_till;
+    string name;
+    uint256 id;
+    string issuer;
+  }
+
+  struct endorsment {
+    uint256 endorser_id;
+    string date;
+    string comment;
+  }
+
+  struct skill {
+    uint256 id;
+    string name;
+    bool verified;
+    uint256[] skill_certifications;
+    uint256[] skill_endorsements;
+  }
+
+  function sign_up (
+      stirng calldata email,
+      string calldata name,
+      string calldata acc_type
+    ) public {
     // check if the account already exists
     require(
       email_to_address[email] == address(0),
@@ -75,4 +98,31 @@ contact Main {
       is_company[msg.sender] = true;
     }
   }
+
+  function memcmp (bytes memory a, bytes memory b) internal pure returns (bool) {
+    return (a.length == b.length) && (keccak256(a) == keccak256(b));
+  }
+
+  function strcmp(string memory a, string memory b) internal pure returns (bool) {
+    return memcmp(bytes(a), bytes(b));
+  }
+
+  function login(string calldata email) public view returns (string memory) {
+    require (msg.sender == email_to_address[email]), "error: incorrect wallet address used for signing in");
+    return (is_company[msg.sender]) ? "company" : "user";
+  }
+
+  function update_wallet_address(string calldata email, address new_address) public {
+    require(email_to_address[email] == msg.sender), "error: function called from incorrect wallet address");
+    email_to_address[email] = new_address;
+    uint256 id = address_to_id[msg.sender];
+    address_to_id[msg.sender] = 0;
+    address_to_id[new_address] = id;
+  }
+
+  modifier verifiedUser (uint256 user_id) {
+    require(user_id == address_to_id[msg.sender]);
+    _;
+  }
+
 }
